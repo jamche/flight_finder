@@ -386,41 +386,41 @@ def test_summary_table_no_data_message():
 
 def test_summary_table_shows_cheapest_per_date():
     results = {
-        "outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []},
+        "outbound": {"Japan (Tokyo)": _SAMPLE_FLIGHTS, "Japan (Osaka)": [], "Taiwan": []},
     }
     html = render_summary_table(results, ["2026-10-23", "2026-10-24"], ["outbound"])
     assert "1,450" in html   # cheapest Oct 23
     assert "1,200" in html   # cheapest Oct 24
 
 def test_summary_table_has_via_column_header():
-    results = {"outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []}}
+    results = {"outbound": {"Japan (Tokyo)": _SAMPLE_FLIGHTS, "Japan (Osaka)": [], "Taiwan": []}}
     html = render_summary_table(results, ["2026-10-23"], ["outbound"])
     assert ">Via<" in html
 
 
 # Full HTML body
 def test_html_body_doctype():
-    results = {"outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []}}
+    results = {"outbound": {"Japan (Tokyo)": _SAMPLE_FLIGHTS, "Japan (Osaka)": [], "Taiwan": []}}
     html = render_html_body(results, ["2026-10-23"], [], ["outbound"], "2026-02-22")
     assert "<!DOCTYPE html>" in html
 
 def test_html_body_contains_report_date():
-    results = {"outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []}}
+    results = {"outbound": {"Japan (Tokyo)": _SAMPLE_FLIGHTS, "Japan (Osaka)": [], "Taiwan": []}}
     html = render_html_body(results, ["2026-10-23"], [], ["outbound"], "2026-02-22")
     assert "2026-02-22" in html
 
 def test_html_body_references_serpapi():
-    results = {"outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []}}
+    results = {"outbound": {"Japan (Tokyo)": _SAMPLE_FLIGHTS, "Japan (Osaka)": [], "Taiwan": []}}
     html = render_html_body(results, ["2026-10-23"], [], ["outbound"], "2026-02-22")
     assert "SerpApi" in html
 
 def test_html_body_no_amadeus_reference():
-    results = {"outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []}}
+    results = {"outbound": {"Japan (Tokyo)": _SAMPLE_FLIGHTS, "Japan (Osaka)": [], "Taiwan": []}}
     html = render_html_body(results, ["2026-10-23"], [], ["outbound"], "2026-02-22")
     assert "Amadeus" not in html
 
 def test_html_body_toronto_in_title():
-    results = {"outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []}}
+    results = {"outbound": {"Japan (Tokyo)": _SAMPLE_FLIGHTS, "Japan (Osaka)": [], "Taiwan": []}}
     html = render_html_body(results, ["2026-10-23"], [], ["outbound"], "2026-02-22")
     assert "Toronto" in html
 
