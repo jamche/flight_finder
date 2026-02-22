@@ -31,7 +31,8 @@ SMTP_USER = os.environ.get("SMTP_USER", "").strip()
 SMTP_PASS = os.environ.get("SMTP_PASS", "").strip()
 
 EMAIL_FROM = os.environ.get("EMAIL_FROM", SMTP_USER)
-EMAIL_TO   = os.environ.get("EMAIL_TO", SMTP_USER)
+# Comma-separated list of recipients, e.g. "a@gmail.com,b@gmail.com"
+EMAIL_TO   = [e.strip() for e in os.environ.get("EMAIL_TO", SMTP_USER).split(",") if e.strip()]
 
 # ---------------------------------------------------------------------------
 # SerpApi configuration
@@ -682,7 +683,7 @@ def send_email(subject: str, html_body: str) -> None:
 
     msg = EmailMessage()
     msg["From"]    = EMAIL_FROM
-    msg["To"]      = EMAIL_TO
+    msg["To"]      = ", ".join(EMAIL_TO)
     msg["Subject"] = subject
     msg.set_content("HTML report attached. Please view this email in an HTML-capable client.")
     msg.add_alternative(html_body, subtype="html")

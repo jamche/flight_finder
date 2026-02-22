@@ -423,3 +423,21 @@ def test_html_body_toronto_in_title():
     results = {"outbound": {"Japan": _SAMPLE_FLIGHTS, "Taiwan": [], "Thailand": []}}
     html = render_html_body(results, ["2026-10-23"], [], ["outbound"], "2026-02-22")
     assert "Toronto" in html
+
+
+# ── EMAIL_TO multi-recipient parsing ─────────────────────────────────────────
+
+def test_email_to_is_a_list():
+    assert isinstance(drf.EMAIL_TO, list)
+
+def test_email_to_multi_recipient_parsing(monkeypatch):
+    import importlib, os
+    monkeypatch.setenv("EMAIL_TO", "a@example.com, b@example.com , c@example.com")
+    recipients = [e.strip() for e in os.environ.get("EMAIL_TO", "").split(",") if e.strip()]
+    assert recipients == ["a@example.com", "b@example.com", "c@example.com"]
+
+def test_email_to_single_recipient_still_a_list(monkeypatch):
+    import os
+    monkeypatch.setenv("EMAIL_TO", "only@example.com")
+    recipients = [e.strip() for e in os.environ.get("EMAIL_TO", "").split(",") if e.strip()]
+    assert recipients == ["only@example.com"]
