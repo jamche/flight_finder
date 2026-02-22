@@ -1,9 +1,9 @@
-name: Daily Flight Price Report
+name: Weekly Flight Price Report
 
 on:
   schedule:
-    # Daily at 12:00 UTC (8am EDT / 7am EST) – catches overnight airline fare updates
-    - cron: "0 12 * * *"
+    # Every Tuesday at 12:00 UTC (8am EDT / 7am EST) – catches Monday night fare sales
+    - cron: "0 12 * * 2"
   workflow_dispatch: {}   # allow manual trigger from the Actions tab
 
 jobs:
@@ -17,9 +17,9 @@ jobs:
 
       # ── Search parameters ────────────────────────────────────────────────────
       ORIGIN:        ${{ vars.ORIGIN        || 'YYZ' }}
-      DEST_JAPAN:    ${{ vars.DEST_JAPAN    || 'TYO' }}
-      DEST_TAIWAN:   ${{ vars.DEST_TAIWAN   || 'TPE' }}
-      DEST_THAILAND: ${{ vars.DEST_THAILAND || 'BKK' }}
+      DEST_JAPAN:  ${{ vars.DEST_JAPAN  || 'TYO' }}
+      DEST_OSAKA:  ${{ vars.DEST_OSAKA  || 'KIX' }}
+      DEST_TAIWAN: ${{ vars.DEST_TAIWAN || 'TPE' }}
 
       # Set DEPARTURE_DATES for fixed dates, or use DAYS_AHEAD for relative dates.
       DEPARTURE_DATES: ${{ vars.DEPARTURE_DATES || '' }}

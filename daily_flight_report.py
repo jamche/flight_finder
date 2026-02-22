@@ -50,9 +50,9 @@ ORIGIN = os.environ.get("ORIGIN", "YYZ")  # Toronto Pearson International
 # Destination IATA codes.  Metro codes (TYO, BKK) let the API pick the
 # cheapest option across all airports in that city.
 DESTINATIONS: Dict[str, str] = {
-    "Japan":    os.environ.get("DEST_JAPAN",    "TYO"),  # Tokyo (NRT + HND)
-    "Taiwan":   os.environ.get("DEST_TAIWAN",   "TPE"),  # Taipei Taoyuan
-    "Thailand": os.environ.get("DEST_THAILAND", "BKK"),  # Bangkok (BKK + DMK)
+    "Japan (Tokyo)": os.environ.get("DEST_JAPAN",  "TYO"),  # Tokyo (NRT + HND)
+    "Japan (Osaka)": os.environ.get("DEST_OSAKA",  "KIX"),  # Osaka Kansai
+    "Taiwan":        os.environ.get("DEST_TAIWAN", "TPE"),  # Taipei Taoyuan
 }
 
 # Departure dates – either explicit comma-separated list OR days ahead from today.
@@ -349,9 +349,9 @@ def fetch_all_flights(
 # ---------------------------------------------------------------------------
 
 _FLAG: Dict[str, str] = {
-    "Japan":    "JP",
-    "Taiwan":   "TW",
-    "Thailand": "TH",
+    "Japan (Tokyo)": "JP",
+    "Japan (Osaka)": "JP",
+    "Taiwan":        "TW",
 }
 
 _HEADER_COLOR = "#1a4f7a"
