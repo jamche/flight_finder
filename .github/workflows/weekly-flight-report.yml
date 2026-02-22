@@ -1,0 +1,63 @@
+name: Weekly Flight Price Report
+
+on:
+  schedule:
+    # Every Monday at 15:00 UTC (~10:00 ET / ~11:00 EDT)
+    - cron: "0 15 * * 1"
+  workflow_dispatch: {}   # allow manual trigger from the Actions tab
+
+jobs:
+  send-flight-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # ── SerpApi ──────────────────────────────────────────────────────────────
+      SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+
+      # ── Search parameters ────────────────────────────────────────────────────
+      ORIGIN:        ${{ vars.ORIGIN        || 'YYZ' }}
+      DEST_JAPAN:    ${{ vars.DEST_JAPAN    || 'TYO' }}
+      DEST_TAIWAN:   ${{ vars.DEST_TAIWAN   || 'TPE' }}
+      DEST_THAILAND: ${{ vars.DEST_THAILAND || 'BKK' }}
+
+      # Set DEPARTURE_DATES for fixed dates, or use DAYS_AHEAD for relative dates.
+      DEPARTURE_DATES: ${{ vars.DEPARTURE_DATES || '' }}
+      DAYS_AHEAD:      ${{ vars.DAYS_AHEAD      || '30,60,90' }}
+
+      # Return dates for return-leg and round-trip searches (blank = outbound only)
+      RETURN_DATES: ${{ vars.RETURN_DATES || '' }}
+      TRIP_TYPES:   ${{ vars.TRIP_TYPES   || 'outbound,return,roundtrip' }}
+
+      ADULTS:      ${{ vars.ADULTS      || '1' }}
+      MAX_RESULTS: ${{ vars.MAX_RESULTS || '5' }}
+      CURRENCY:    ${{ vars.CURRENCY    || 'CAD' }}
+
+      EARLIEST_DEP_DATE: ${{ vars.EARLIEST_DEP_DATE || '' }}
+      EARLIEST_DEP_TIME: ${{ vars.EARLIEST_DEP_TIME || '' }}
+
+      # ── SMTP email ───────────────────────────────────────────────────────────
+      SMTP_HOST:  ${{ secrets.SMTP_HOST }}
+      SMTP_PORT:  ${{ vars.SMTP_PORT || '587' }}
+      SMTP_USER:  ${{ secrets.SMTP_USER }}
+      SMTP_PASS:  ${{ secrets.SMTP_PASS }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_TO:   ${{ secrets.EMAIL_TO }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run flight price report
+        run: python daily_flight_report.py
