@@ -58,12 +58,29 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 |---|---|
 | `SERPAPI_KEY` | Your SerpApi API key. Free tier: 100 searches/month. Get one at [serpapi.com](https://serpapi.com). |
 
+### Fixture / Mock Mode (run without consuming API quota)
+
+| Variable | Description |
+|---|---|
+| `SAVE_FIXTURES=1` | Save raw API responses to `fixtures/` after each call. Run once to capture real data. |
+| `MOCK_MODE=1` | Read from saved fixture files instead of calling the API. No quota consumed. |
+
+```bash
+# Step 1 – capture real responses to disk (uses API quota once)
+SAVE_FIXTURES=1 python daily_flight_report.py
+
+# Step 2 – replay forever without API calls
+MOCK_MODE=1 python daily_flight_report.py
+```
+
+> `fixtures/` is gitignored because SerpApi responses embed your API key.
+
 ### Search Parameters
 
 | Variable | Default | Description |
 |---|---|---|
 | `ORIGIN` | `YYZ` | Departure airport IATA code |
-| `DEST_JAPAN` | `TYO` | Tokyo destination code (metro code — searches NRT and HND) |
+| `DEST_JAPAN` | `NRT` | Tokyo Narita airport (use `HND` for Haneda) |
 | `DEST_OSAKA` | `KIX` | Osaka Kansai International |
 | `DEST_TAIWAN` | `TPE` | Taipei Taoyuan |
 | `DEPARTURE_DATES` | _(empty)_ | Explicit comma-separated dates to search (`YYYY-MM-DD`). Takes priority over `DAYS_AHEAD`. |

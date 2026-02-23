@@ -17,7 +17,7 @@ jobs:
 
       # ── Search parameters ────────────────────────────────────────────────────
       ORIGIN:        ${{ vars.ORIGIN        || 'YYZ' }}
-      DEST_JAPAN:  ${{ vars.DEST_JAPAN  || 'TYO' }}
+      DEST_JAPAN:  ${{ vars.DEST_JAPAN  || 'NRT' }}
       DEST_OSAKA:  ${{ vars.DEST_OSAKA  || 'KIX' }}
       DEST_TAIWAN: ${{ vars.DEST_TAIWAN || 'TPE' }}
 

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-Daily Flight Price Report
-- Searches for flights from Toronto (YYZ) to Japan, Taiwan, and Thailand
+Flight Price Report
+- Searches for flights from Toronto (YYZ) to Japan (Tokyo, Osaka) and Taiwan
   via the SerpApi Google Flights engine
 - Emails an HTML comparison table of results via SMTP
 
 Register free at: https://serpapi.com (100 searches/month, no credit card required)
 """
 
+import json
 import os
 import sys
 import smtplib
@@ -41,16 +42,23 @@ EMAIL_TO   = [e.strip() for e in os.environ.get("EMAIL_TO", SMTP_USER).split(","
 SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "").strip()
 SERPAPI_URL = "https://serpapi.com/search"
 
+# Fixture mode – set SAVE_FIXTURES=1 to cache raw API responses to disk,
+# then MOCK_MODE=1 to replay them without consuming API quota.
+_bool_env = lambda key: os.environ.get(key, "").strip().lower() in ("1", "true", "yes")
+SAVE_FIXTURES = _bool_env("SAVE_FIXTURES")
+MOCK_MODE     = _bool_env("MOCK_MODE")
+FIXTURES_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
+
 # ---------------------------------------------------------------------------
 # Search configuration
 # ---------------------------------------------------------------------------
 
 ORIGIN = os.environ.get("ORIGIN", "YYZ")  # Toronto Pearson International
 
-# Destination IATA codes.  Metro codes (TYO, BKK) let the API pick the
-# cheapest option across all airports in that city.
+# Destination IATA airport codes.  SerpApi requires specific airport codes —
+# metro codes like TYO are not supported by the Google Flights API.
 DESTINATIONS: Dict[str, str] = {
-    "Japan (Tokyo)": os.environ.get("DEST_JAPAN",  "TYO"),  # Tokyo (NRT + HND)
+    "Japan (Tokyo)": os.environ.get("DEST_JAPAN",  "NRT"),  # Tokyo Narita (or HND for Haneda)
     "Japan (Osaka)": os.environ.get("DEST_OSAKA",  "KIX"),  # Osaka Kansai
     "Taiwan":        os.environ.get("DEST_TAIWAN", "TPE"),  # Taipei Taoyuan
 }
@@ -146,13 +154,45 @@ def _format_layovers(layovers: List[Dict[str, Any]]) -> str:
 # SerpApi client
 # ---------------------------------------------------------------------------
 
+def _fixture_path(origin: str, destination: str, dep_date: str, return_date: Optional[str]) -> str:
+    name = f"{origin}_{destination}_{dep_date}"
+    if return_date:
+        name += f"_ret_{return_date}"
+    return os.path.join(FIXTURES_DIR, name + ".json")
+
+
+def _parse_response(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    book_url = data.get("search_metadata", {}).get("google_flights_url", "")
+    results = data.get("best_flights", []) + data.get("other_flights", [])
+    for fg in results:
+        fg["_book_url"] = book_url
+    return results[:MAX_RESULTS]
+
+
 def search_flights(
     origin: str,
     destination: str,
     dep_date: str,
     return_date: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """Call SerpApi Google Flights and return combined best + other flight groups."""
+    """Call SerpApi Google Flights and return combined best + other flight groups.
+
+    With MOCK_MODE=1: reads from a previously saved fixture file (no API call).
+    With SAVE_FIXTURES=1: saves the raw API response to fixtures/ after each call.
+    """
+    fpath = _fixture_path(origin, destination, dep_date, return_date)
+
+    # ── Mock mode: read from saved fixture, no API call ──────────────────────
+    if MOCK_MODE:
+        if not os.path.exists(fpath):
+            raise FileNotFoundError(
+                f"Mock mode is on but no fixture found: {fpath}\n"
+                f"Run once with SAVE_FIXTURES=1 to capture real responses."
+            )
+        with open(fpath) as f:
+            return _parse_response(json.load(f))
+
+    # ── Live mode: call SerpApi ───────────────────────────────────────────────
     if not SERPAPI_KEY:
         raise RuntimeError(
             "SERPAPI_KEY must be set. Register free at https://serpapi.com"
@@ -173,14 +213,21 @@ def search_flights(
     resp = requests.get(SERPAPI_URL, params=params, timeout=30)
     if resp.status_code == 200:
         data = resp.json()
+        if SAVE_FIXTURES:
+            os.makedirs(FIXTURES_DIR, exist_ok=True)
+            with open(fpath, "w") as f:
+                json.dump(data, f, indent=2)
+            print(f"    Fixture saved: {os.path.basename(fpath)}", file=sys.stderr)
         # Grab the pre-built Google Flights URL from the response metadata –
         # it contains the encoded tfs blob that actually pre-loads the search.
-        book_url = data.get("search_metadata", {}).get("google_flights_url", "")
-        results = data.get("best_flights", []) + data.get("other_flights", [])
-        for fg in results:
-            fg["_book_url"] = book_url
-        return results[:MAX_RESULTS]
+        return _parse_response(data)
     if resp.status_code in (400, 404):
+        # Log the API error body so we can diagnose issues (e.g. invalid airport codes)
+        try:
+            err_msg = resp.json().get("error", resp.text[:300])
+        except Exception:
+            err_msg = resp.text[:300]
+        print(f"    API {resp.status_code} for {origin}->{destination} {dep_date}: {err_msg}", file=sys.stderr)
         return []
     resp.raise_for_status()
     return []
