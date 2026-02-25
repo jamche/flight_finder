@@ -56,7 +56,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 
 | Variable | Description |
 |---|---|
-| `SERPAPI_KEY` | Your SerpApi API key. Free tier: 100 searches/month. Get one at [serpapi.com](https://serpapi.com). |
+| `SERPAPI_KEY` | Your SerpApi API key. Free tier: 250 searches/month. Get one at [serpapi.com](https://serpapi.com). |
 
 ### Fixture / Mock Mode (run without consuming API quota)
 
