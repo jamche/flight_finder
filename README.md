@@ -73,8 +73,6 @@ SAVE_FIXTURES=1 python daily_flight_report.py
 MOCK_MODE=1 python daily_flight_report.py
 ```
 
-> `fixtures/` is gitignored because SerpApi responses embed your API key.
-
 ### Search Parameters
 
 | Variable | Default | Description |
